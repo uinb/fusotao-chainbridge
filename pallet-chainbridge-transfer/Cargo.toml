@@ -2,10 +2,9 @@
 name = "pallet-chainbridge-transfer"
 version = "0.1.0"
 edition = "2021"
-authors = ["Parity Technologies <admin@parity.io>", "Octopus Network <hi@oct.network>"]
+authors = ["Parity Technologies <admin@parity.io>", "Octopus Network <hi@oct.network>", "UINB Tech <hi@fusotao.org>"]
 license = "Apache-2.0"
-homepage = "https://oct.network"
-repository = "https://github.com/octopus-network/fusotao-chainbridge.git"
+repository = "https://github.com/uinb/fusotao-chainbridge.git"
 readme = "README.md"
 
 [package.metadata.docs.rs]
@@ -33,7 +32,8 @@ pallet-chainbridge-support = { path = "../pallet-chainbridge-support", default-f
 sp-keyring = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.18" }
 sp-core = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.18" }
 pallet-balances = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.18" }
-pallet-assets = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.18" }
+pallet-fuso-token = { git = "https://github.com/uinb/fusotao-protocol.git", branch = "master" }
+#pallet-assets = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.18" }
 
 [features]
 default = ["std"]

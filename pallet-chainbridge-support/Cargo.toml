@@ -2,13 +2,11 @@
 name = "pallet-chainbridge-support"
 version = "0.1.0"
 edition = "2021"
-authors = ["Octopus Network <hi@oct.network>"]
+authors = ["Octopus Network <hi@oct.network>", "UINB Tech<hi@fusotao.org>"]
 license = "Apache-2.0"
-homepage = "https://oct.network"
-repository = "https://github.com/octopus-network/octopus-pallets.git"
+repository = "https://github.com/uinb/fusotao-chainbridge.git"
 description = "FRAME pallet used to Crosschain transfer."
 readme = "README.md"
-documentation = "https://docs.rs/pallet-chainbridge"
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]
 

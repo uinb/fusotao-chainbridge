@@ -5,4 +5,3 @@ members = [
     "pallet-chainbridge-transfer/chainbridge-erc721",
     "pallet-chainbridge-support"
 ]
-

@@ -8,15 +8,15 @@ use super::{
     },
     *,
 };
-use frame_support::{assert_err, assert_noop, assert_ok, dispatch::DispatchError};
-use pallet_assets as assets;
-
 use crate::Error::InvalidCallMessage;
 use crate::{
     mock::{event_exists, AccountId, Balance, DOLLARS},
     Event as ChainBridgeTransferEvent,
 };
+use frame_support::{assert_err, assert_noop, assert_ok, dispatch::DispatchError};
 use pallet_chainbridge_erc721::Erc721Token;
+use pallet_chainbridge_support::ResourceId;
+use pallet_fuso_token as assets;
 use sp_core::bytes::from_hex;
 use sp_core::{blake2_256, crypto::AccountId32, H256};
 use sp_keyring::AccountKeyring;

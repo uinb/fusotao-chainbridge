@@ -21,7 +21,7 @@ use frame_support::{
     pallet_prelude::*,
     sp_runtime::traits::AtLeast32BitUnsigned,
     sp_std::fmt::Debug,
-    traits::{Currency, Get, StorageVersion},
+    traits::{Currency, ExistenceRequirement, Get, StorageVersion},
     weights::GetDispatchInfo,
 };
 use frame_system::{ensure_signed, pallet_prelude::*};
@@ -29,7 +29,6 @@ pub use pallet::*;
 use pallet_chainbridge as bridge;
 use pallet_chainbridge_erc721 as erc721;
 use pallet_chainbridge_support::traits::Agent;
-use scale_info::prelude::string::String;
 use sp_core::U256;
 use sp_runtime::traits::{Dispatchable, SaturatedConversion, TrailingZeroInput};
 use sp_std::{convert::From, prelude::*};
@@ -44,11 +43,8 @@ const STORAGE_VERSION: StorageVersion = StorageVersion::new(0);
 #[frame_support::pallet]
 pub mod pallet {
     use super::*;
-    use frame_support::traits::{
-        fungibles::Mutate,
-        tokens::{AssetId, Balance as AssetBalance},
-    };
-    use log::{info, log};
+    use frame_support::traits::{fungibles::Mutate, tokens::Balance as AssetBalance};
+    // use log::{info, log};
     use pallet_chainbridge_support::traits::Agent;
     use pallet_chainbridge_support::traits::AssetIdResourceIdProvider;
     use pallet_chainbridge_support::ResourceId;
@@ -106,6 +102,10 @@ pub mod pallet {
         type NativeTokenId: Get<ResourceId>;
 
         type Erc721Id: Get<ResourceId>;
+
+        type DonorAccount: Get<Self::AccountId>;
+
+        type DonationForAgent: Get<BalanceOf<Self>>;
     }
 
     #[pallet::storage]
@@ -117,6 +117,9 @@ pub mod pallet {
     #[pallet::getter(fn assets_stored)]
     pub type AssetsStored<T: Config> = StorageMap<_, Blake2_128Concat, T::Hash, bool>;
 
+    #[pallet::storage]
+    #[pallet::getter(fn agents)]
+    pub type Agents<T: Config> = StorageMap<_, Blake2_128Concat, Depositer, T::AccountId>;
 
     #[pallet::event]
     #[pallet::generate_deposit(pub (super) fn deposit_event)]
@@ -156,8 +159,6 @@ pub mod pallet {
 
     #[pallet::call]
     impl<T: Config> Pallet<T> {
-
-
         #[pallet::weight(195_000_0000)]
         pub fn native_limit(origin: OriginFor<T>, value: bool) -> DispatchResult {
             ensure_root(origin)?;
@@ -320,11 +321,18 @@ impl<T: Config> Agent<T::AccountId> for Pallet<T> {
     /// bind the origin to an appchain account without private key
     /// function RegisterInterchainAccount(counterpartyPortId: Identifier, connectionID: Identifier) returns (nil)
     fn register_agent(origin: Self::Origin) -> Result<T::AccountId, DispatchError> {
-        // TODO transfer some tao
-        let deterministic =
-            (b"-*-#fusotao#-*-", origin.clone()).using_encoded(sp_io::hashing::blake2_256);
-        let host_addr = Decode::decode(&mut TrailingZeroInput::new(deterministic.as_ref()))
+        let hash = (b"-*-#fusotao#-*-", origin.clone()).using_encoded(sp_io::hashing::blake2_256);
+        let host_addr = Decode::decode(&mut TrailingZeroInput::new(hash.as_ref()))
             .map_err(|_| Error::<T>::RegisterAgentFailed)?;
+        if !Agents::<T>::contains_key(&origin.1) {
+            T::Currency::transfer(
+                &T::DonorAccount::get(),
+                &host_addr,
+                T::DonationForAgent::get(),
+                ExistenceRequirement::KeepAlive,
+            )?;
+            Agents::<T>::insert(origin.1.clone(), host_addr.clone());
+        }
         Ok(host_addr)
     }
 

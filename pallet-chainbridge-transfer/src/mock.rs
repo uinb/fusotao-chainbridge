@@ -73,7 +73,7 @@ construct_runtime!(
         UncheckedExtrinsic = UncheckedExtrinsic
     {
         System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
-        Assets: pallet_assets::<Instance1>,
+        Assets: pallet_fuso_token,
         Balances: pallet_balances::{Pallet, Call, Config<T>, Storage, Event<T>},
         Bridge: pallet_chainbridge::{Pallet, Call, Storage, Event<T>},
         ChainBridgeTransfer: pallet_chainbridge_transfer::{Pallet, Call, Storage, Event<T>},
@@ -112,49 +112,63 @@ impl pallet_balances::Config for Test {
     type WeightInfo = ();
 }
 
+// parameter_types! {
+//     pub const AssetDeposit: Balance = 100 * DOLLARS;
+//     pub const ApprovalDeposit: Balance = 1 * DOLLARS;
+//     pub const StringLimit: u32 = 50;
+//     pub const MetadataDepositBase: Balance = 10 * DOLLARS;
+//     pub const MetadataDepositPerByte: Balance = 1 * DOLLARS;
+// }
+
+// impl pallet_assets::Config<pallet_assets::Instance1> for Test {
+//     type ApprovalDeposit = ApprovalDeposit;
+//     type AssetAccountDeposit = ConstU128<DOLLARS>;
+//     type AssetDeposit = AssetDeposit;
+//     type AssetId = AssetId;
+//     type Balance = AssetBalance;
+//     type Currency = Balances;
+//     type Event = Event;
+//     type Extra = ();
+//     type ForceOrigin = EnsureRoot<AccountId>;
+//     type Freezer = ();
+//     type MetadataDepositBase = MetadataDepositBase;
+//     type MetadataDepositPerByte = MetadataDepositPerByte;
+//     type StringLimit = StringLimit;
+//     type WeightInfo = pallet_assets::weights::SubstrateWeight<Test>;
+// }
+
 parameter_types! {
-    pub const AssetDeposit: Balance = 100 * DOLLARS;
-    pub const ApprovalDeposit: Balance = 1 * DOLLARS;
-    pub const StringLimit: u32 = 50;
-    pub const MetadataDepositBase: Balance = 10 * DOLLARS;
-    pub const MetadataDepositPerByte: Balance = 1 * DOLLARS;
+    pub const NativeTokenId: u32 = 0;
 }
 
-impl pallet_assets::Config<pallet_assets::Instance1> for Test {
-    type ApprovalDeposit = ApprovalDeposit;
-    type AssetAccountDeposit = ConstU128<DOLLARS>;
-    type AssetDeposit = AssetDeposit;
-    type AssetId = AssetId;
-    type Balance = AssetBalance;
-    type Currency = Balances;
+impl pallet_fuso_token::Config for Test {
     type Event = Event;
-    type Extra = ();
-    type ForceOrigin = EnsureRoot<AccountId>;
-    type Freezer = ();
-    type MetadataDepositBase = MetadataDepositBase;
-    type MetadataDepositPerByte = MetadataDepositPerByte;
-    type StringLimit = StringLimit;
-    type WeightInfo = pallet_assets::weights::SubstrateWeight<Test>;
+    type TokenId = u32;
+    type NativeTokenId = NativeTokenId;
+    type Weight = pallet_fuso_token::weights::SubstrateWeight<Test>;
 }
 
 parameter_types! {
-    pub NativeTokenId: bridge::ResourceId = bridge::derive_resource_id(1, &blake2_128(b"DAV")); // native token id
+    pub NativeResourceId: bridge::ResourceId = bridge::derive_resource_id(0, &blake2_128(b"TAO")); // native token id
     pub HashId: bridge::ResourceId = bridge::derive_resource_id(1, &blake2_128(b"hash"));
     pub Erc721Id: bridge::ResourceId = bridge::derive_resource_id(1, &blake2_128(b"NFT"));
     pub NativeTokenMaxValue : Balance = 1000_000_000_000_000_0000u128; // need to set correct value
+    pub DonorAccount: AccountId32 = AccountId32::new([0u8; 32]);
+    pub DonationForAgent : Balance = 1000_000_000_000_000_0000u128; // need to set correct value
 }
 
 impl pallet_chainbridge_erc721::Config for Test {
     type Event = Event;
     type Identifier = Erc721Id;
 }
+
 pub type AssetBalance = u128;
 pub type AssetId = u32;
 
 impl Config for Test {
     type AssetBalance = AssetBalance;
     type AssetId = AssetId;
-    type AssetIdByName = ChainBridgeTransfer;
+    type AssetIdByName = Assets;
     type BridgeOrigin = bridge::EnsureBridge<Test>;
     type Call = Call;
     type Currency = Balances;
@@ -162,8 +176,10 @@ impl Config for Test {
     type Event = Event;
     type Fungibles = Assets;
     type HashId = HashId;
-    type NativeTokenId = NativeTokenId;
+    type NativeTokenId = NativeResourceId;
     type NativeTokenMaxValue = NativeTokenMaxValue;
+    type DonorAccount = DonorAccount;
+    type DonationForAgent = DonationForAgent;
 }
 
 pub const RELAYER_A: AccountId32 = AccountId32::new([2u8; 32]);
@@ -182,13 +198,12 @@ pub fn new_test_ext() -> sp_io::TestExternalities {
     .assimilate_storage(&mut storage)
     .unwrap();
 
-    let r_id = bridge::derive_resource_id(0, b"BAR");
-
-    pallet_chainbridge_transfer::GenesisConfig::<Test> {
-        asset_id_by_resource_id: vec![(r_id, 999, "BAR".to_string())],
-    }
-    .assimilate_storage(&mut storage)
-    .unwrap();
+    // let r_id = bridge::derive_resource_id(0, b"BAR");
+    // pallet_chainbridge_transfer::GenesisConfig::<Test> {
+    //     asset_id_by_resource_id: vec![(r_id, 999, "BAR".to_string())],
+    // }
+    // .assimilate_storage(&mut storage)
+    // .unwrap();
 
     let mut ext = sp_io::TestExternalities::new(storage);
     ext.execute_with(|| System::set_block_number(1));
