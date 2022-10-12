@@ -1,0 +1,8 @@
+[workspace]
+members = [
+    "pallet-chainbridge",
+    "pallet-chainbridge-transfer",
+    "pallet-chainbridge-transfer/chainbridge-erc721",
+    "pallet-chainbridge-support"
+]
+
