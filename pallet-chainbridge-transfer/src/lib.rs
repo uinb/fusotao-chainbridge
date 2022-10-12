@@ -109,11 +109,6 @@ pub mod pallet {
     }
 
     #[pallet::storage]
-    #[pallet::getter(fn resource_id_by_asset_id)]
-    pub type ResourceIdOfAssetId<T: Config> =
-        StorageMap<_, Blake2_128Concat, ResourceId, (T::AssetId, Vec<u8>)>;
-
-    #[pallet::storage]
     #[pallet::getter(fn native_check)]
     pub type NativeCheck<T> = StorageValue<_, bool, ValueQuery>;
 
@@ -122,28 +117,6 @@ pub mod pallet {
     #[pallet::getter(fn assets_stored)]
     pub type AssetsStored<T: Config> = StorageMap<_, Blake2_128Concat, T::Hash, bool>;
 
-    #[pallet::genesis_config]
-    pub struct GenesisConfig<T: Config> {
-        pub asset_id_by_resource_id: Vec<(ResourceId, T::AssetId, String)>,
-    }
-
-    #[cfg(feature = "std")]
-    impl<T: Config> Default for GenesisConfig<T> {
-        fn default() -> Self {
-            Self {
-                asset_id_by_resource_id: Vec::new(),
-            }
-        }
-    }
-
-    #[pallet::genesis_build]
-    impl<T: Config> GenesisBuild<T> for GenesisConfig<T> {
-        fn build(&self) {
-            for (token_id, id, token_name) in self.asset_id_by_resource_id.iter() {
-                <ResourceIdOfAssetId<T>>::insert(token_id, (id, token_name.as_bytes().to_vec()));
-            }
-        }
-    }
 
     #[pallet::event]
     #[pallet::generate_deposit(pub (super) fn deposit_event)]
@@ -183,31 +156,7 @@ pub mod pallet {
 
     #[pallet::call]
     impl<T: Config> Pallet<T> {
-        #[pallet::weight(195_000_0000)]
-        pub fn set_token_id(
-            origin: OriginFor<T>,
-            resource_id: ResourceId,
-            token_id: T::AssetId,
-            token_name: Vec<u8>,
-        ) -> DispatchResult {
-            ensure_root(origin)?;
 
-            // verify token name is valid
-            String::from_utf8(token_name.clone()).map_err(|_| <Error<T>>::InvalidTokenName)?;
-
-            <ResourceIdOfAssetId<T>>::insert(resource_id, (token_id, token_name));
-
-            Ok(())
-        }
-
-        #[pallet::weight(195_000_0000)]
-        pub fn remove_token_id(origin: OriginFor<T>, resource_id: ResourceId) -> DispatchResult {
-            ensure_root(origin)?;
-
-            <ResourceIdOfAssetId<T>>::remove(resource_id);
-
-            Ok(())
-        }
 
         #[pallet::weight(195_000_0000)]
         pub fn native_limit(origin: OriginFor<T>, value: bool) -> DispatchResult {
