@@ -9,9 +9,7 @@ mod tests;
 
 pub mod fungible;
 pub mod token;
-mod traits;
 
-use crate::traits::AssetIdResourceIdProvider;
 use codec::EncodeLike;
 use frame_support::{
     dispatch::DispatchResult,
@@ -33,8 +31,7 @@ use sp_core::U256;
 use sp_runtime::traits::{Dispatchable, SaturatedConversion, TrailingZeroInput};
 use sp_std::{convert::From, prelude::*};
 
-type ResourceId = bridge::ResourceId;
-type Depositer = bridge::EthAddress;
+type Depositer = pallet_chainbridge_support::EthAddress;
 type BalanceOf<T> =
     <<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
 
@@ -44,13 +41,14 @@ const STORAGE_VERSION: StorageVersion = StorageVersion::new(0);
 #[frame_support::pallet]
 pub mod pallet {
     use super::*;
-    use crate::traits::AssetIdResourceIdProvider;
+    use pallet_chainbridge_support::traits::AssetIdResourceIdProvider;
     use frame_support::traits::{
         fungibles::Mutate,
         tokens::{AssetId, Balance as AssetBalance},
     };
     use pallet_chainbridge_support::traits::Agent;
     use log::{info, log};
+    use pallet_chainbridge_support::ResourceId;
 
     #[pallet::pallet]
     #[pallet::generate_store(pub (super) trait Store)]
@@ -88,6 +86,7 @@ pub mod pallet {
 
         /// Map of cross-chain asset ID & name
         type AssetIdByName: AssetIdResourceIdProvider<Self::AssetId>;
+
 
         /// Max native token value
         type NativeTokenMaxValue: Get<BalanceOf<Self>>;
@@ -161,6 +160,7 @@ pub mod pallet {
     pub enum Error<T> {
         InvalidTransfer,
         InvalidTokenId,
+        InValidResourceId,
         WrongAssetId,
         InvalidTokenName,
         OverTransferLimit,
@@ -350,28 +350,6 @@ pub mod pallet {
             T::BridgeOrigin::ensure_origin(origin)?;
             <erc721::Pallet<T>>::mint_token(recipient, id, metadata)?;
             Ok(())
-        }
-    }
-}
-
-impl<T: Config> AssetIdResourceIdProvider<T::AssetId> for Pallet<T> {
-    type Err = Error<T>;
-
-    fn try_get_asset_id(resource_id: ResourceId) -> Result<<T as Config>::AssetId, Self::Err> {
-        let asset_id = <ResourceIdOfAssetId<T>>::try_get(resource_id);
-        match asset_id {
-            Ok(id) => Ok(id.0),
-            _ => Err(<Error<T>>::InvalidTokenId),
-        }
-    }
-
-    fn try_get_asset_name(asset_id: T::AssetId) -> Result<ResourceId, Self::Err> {
-        let token_id = <ResourceIdOfAssetId<T>>::iter()
-            .find(|p| p.1 .0 == asset_id)
-            .map(|p| p.0);
-        match token_id {
-            Some(id) => Ok(id),
-            _ => Err(<Error<T>>::WrongAssetId),
         }
     }
 }

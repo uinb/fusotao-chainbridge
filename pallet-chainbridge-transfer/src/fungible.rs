@@ -1,5 +1,7 @@
 use super::*;
 use frame_support::traits::fungibles::Mutate;
+use pallet_chainbridge_support::ResourceId;
+use pallet_chainbridge_support::traits::AssetIdResourceIdProvider;
 
 impl<T: Config> Pallet<T> {
     pub(crate) fn do_burn_assets(
@@ -11,7 +13,7 @@ impl<T: Config> Pallet<T> {
     ) -> DispatchResult {
         let amount = amount.saturated_into::<u128>();
 
-        let token_id = Self::try_get_asset_id(r_id)?;
+        let token_id = T::AssetIdByName::try_get_asset_id(r_id).map_err(|_| Error::<T>::InValidResourceId)?;
 
         <T::Fungibles as Mutate<T::AccountId>>::burn_from(token_id, &who, amount.into())?;
         <bridge::Pallet<T>>::transfer_fungible(
@@ -30,7 +32,8 @@ impl<T: Config> Pallet<T> {
         r_id: ResourceId,
     ) -> DispatchResult {
         let amount = amount.saturated_into::<u128>();
-        let token_id = Self::try_get_asset_id(r_id)?;
+        let token_id = T::AssetIdByName::try_get_asset_id(r_id)
+            .map_err(|_|Error::<T>::InValidResourceId)?;
         <T::Fungibles as Mutate<T::AccountId>>::mint_into(token_id, &who, amount.into())?;
 
         Ok(())

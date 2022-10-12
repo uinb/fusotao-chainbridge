@@ -1,3 +1,4 @@
+use pallet_chainbridge_support::ResourceId;
 use super::*;
 
 impl<T: Config> Pallet<T> {
