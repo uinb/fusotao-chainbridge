@@ -6,6 +6,8 @@ use frame_support::{
     traits::{EnsureOrigin, Get, StorageVersion},
     PalletId,
 };
+pub use pallet::*;
+pub use pallet_chainbridge_support::*;
 use scale_info::TypeInfo;
 use sp_core::U256;
 use sp_runtime::{
@@ -13,8 +15,6 @@ use sp_runtime::{
     RuntimeDebug,
 };
 use sp_std::prelude::*;
-pub use pallet::*;
-pub use pallet_chainbridge_support::*;
 #[cfg(test)]
 mod mock;
 #[cfg(test)]
@@ -22,7 +22,6 @@ mod tests;
 
 const DEFAULT_RELAYER_THRESHOLD: u32 = 1;
 const MODULE_ID: PalletId = PalletId(*b"oc/bridg");
-
 
 pub fn derive_resource_id(chain: u8, id: &[u8]) -> ResourceId {
     let mut r_id: ResourceId = [0; 32];

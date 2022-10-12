@@ -1,5 +1,5 @@
-use pallet_chainbridge_support::ResourceId;
 use super::*;
+use pallet_chainbridge_support::ResourceId;
 
 impl<T: Config> Pallet<T> {
     pub(crate) fn do_lock(

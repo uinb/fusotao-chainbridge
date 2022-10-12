@@ -10,6 +10,7 @@ mod tests;
 pub mod fungible;
 pub mod token;
 
+use codec::Codec;
 use codec::EncodeLike;
 use frame_support::{
     dispatch::DispatchResult,
@@ -18,14 +19,16 @@ use frame_support::{
 };
 use frame_support::{
     pallet_prelude::*,
+    sp_runtime::traits::AtLeast32BitUnsigned,
+    sp_std::fmt::Debug,
     traits::{Currency, Get, StorageVersion},
     weights::GetDispatchInfo,
 };
 use frame_system::{ensure_signed, pallet_prelude::*};
-use pallet_chainbridge_support::traits::Agent;
 pub use pallet::*;
 use pallet_chainbridge as bridge;
 use pallet_chainbridge_erc721 as erc721;
+use pallet_chainbridge_support::traits::Agent;
 use scale_info::prelude::string::String;
 use sp_core::U256;
 use sp_runtime::traits::{Dispatchable, SaturatedConversion, TrailingZeroInput};
@@ -41,13 +44,13 @@ const STORAGE_VERSION: StorageVersion = StorageVersion::new(0);
 #[frame_support::pallet]
 pub mod pallet {
     use super::*;
-    use pallet_chainbridge_support::traits::AssetIdResourceIdProvider;
     use frame_support::traits::{
         fungibles::Mutate,
         tokens::{AssetId, Balance as AssetBalance},
     };
-    use pallet_chainbridge_support::traits::Agent;
     use log::{info, log};
+    use pallet_chainbridge_support::traits::Agent;
+    use pallet_chainbridge_support::traits::AssetIdResourceIdProvider;
     use pallet_chainbridge_support::ResourceId;
 
     #[pallet::pallet]
@@ -69,7 +72,14 @@ pub mod pallet {
         type Currency: Currency<Self::AccountId>;
 
         /// Identifier for the class of asset.
-        type AssetId: AssetId + MaybeSerializeDeserialize;
+        type AssetId: Member
+            + Parameter
+            + AtLeast32BitUnsigned
+            + Codec
+            + Copy
+            + Debug
+            + Default
+            + MaybeSerializeDeserialize;
 
         /// The units in which we record balances.
         type AssetBalance: AssetBalance + From<u128> + Into<u128>;
@@ -86,7 +96,6 @@ pub mod pallet {
 
         /// Map of cross-chain asset ID & name
         type AssetIdByName: AssetIdResourceIdProvider<Self::AssetId>;
-
 
         /// Max native token value
         type NativeTokenMaxValue: Get<BalanceOf<Self>>;
